@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspberry Pi モーター制御</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+            height: 200px;
+        }
+        
+        .control-btn {
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .forward-btn {
+            background-color: #4CAF50;
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        .left-btn {
+            background-color: #2196F3;
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .right-btn {
+            background-color: #FF9800;
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        .backward-btn {
+            background-color: #9C27B0;
+            grid-column: 2;
+            grid-row: 2;
+        }
+        
+        .speed-control {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .speed-slider {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            margin: 10px 0;
+        }
+        
+        .speed-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+        
+        .status {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .status-value {
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .connection-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        
+        .connected {
+            background-color: #4CAF50;
+        }
+        
+        .disconnected {
+            background-color: #f44336;
+        }
+        
+        .duration-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .duration-input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        @media (max-width: 600px) {
+            .control-panel {
+                height: 180px;
+            }
+            
+            .control-btn {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            Raspberry Pi モーター制御
+            <span id="connectionStatus" class="connection-status disconnected"></span>
+        </h1>
+        
+        <div class="speed-control">
+            <label for="speedSlider">速度設定:</label>
+            <div class="speed-value">
+                <span id="speedValue">50</span>%
+            </div>
+            <input type="range" id="speedSlider" class="speed-slider" min="0" max="100" value="50">
+        </div>
+        
+        <div class="duration-control">
+            <label for="durationInput">継続時間設定:</label>
+            <small>（ボタンを押している間のみ動作します）</small>
+        </div>
+        
+        <div class="control-panel">
+            <button class="control-btn forward-btn" data-action="forward">
+                ↑<br>前進
+            </button>
+            <button class="control-btn left-btn" data-action="left">
+                ←<br>左旋回
+            </button>
+            <button class="control-btn right-btn" data-action="right">
+                →<br>右旋回
+            </button>
+            <button class="control-btn backward-btn" data-action="backward">
+                ↓<br>後進
+            </button>
+        </div>
+        
+        <div class="status">
+            <div class="status-title">ステータス</div>
+            <div id="statusValue" class="status-value">待機中...</div>
+        </div>
+    </div>
+
+    <script>
+        // Socket.IO接続
+        const socket = io();
+        
+        // DOM要素の取得
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const statusValue = document.getElementById('statusValue');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const controlButtons = document.querySelectorAll('.control-btn');
+        
+        // 接続状態の更新
+        socket.on('connect', function() {
+            console.log('サーバーに接続しました');
+            connectionStatus.className = 'connection-status connected';
+            statusValue.textContent = 'サーバーに接続しました';
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('サーバーから切断されました');
+            connectionStatus.className = 'connection-status disconnected';
+            statusValue.textContent = 'サーバーから切断されました';
+        });
+        
+        // ステータス更新
+        socket.on('status', function(data) {
+            statusValue.textContent = `動作: ${data.action}, 速度: ${data.speed}%`;
+        });
+        
+        // エラーメッセージ
+        socket.on('error', function(data) {
+            statusValue.textContent = `エラー: ${data.message}`;
+            statusValue.style.color = 'red';
+            setTimeout(() => {
+                statusValue.style.color = '#666';
+            }, 3000);
+        });
+        
+        // 速度スライダーの更新
+        speedSlider.addEventListener('input', function() {
+            speedValue.textContent = this.value;
+        });
+        
+        // モーター制御ボタンのイベントリスナー
+        controlButtons.forEach(button => {
+            // マウス/タッチダウン時 - モーター開始
+            button.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                const action = this.getAttribute('data-action');
+                const speed = parseInt(speedSlider.value);
+                
+                socket.emit('motor_control', {
+                    action: action,
+                    speed: speed,
+                    duration: 0  // 継続時間は0（無制限）
+                });
+                
+                // ボタンのフィードバック
+                this.style.transform = 'scale(0.95)';
+                this.style.opacity = '0.8';
+            });
+            
+            // マウス/タッチアップ時 - モーター停止
+            button.addEventListener('mouseup', function(e) {
+                e.preventDefault();
+                socket.emit('motor_control', {
+                    action: 'stop',
+                    speed: 0,
+                    duration: 0
+                });
+                
+                this.style.transform = 'scale(1)';
+                this.style.opacity = '1';
+            });
+            
+            // マウスリーブ時 - モーター停止（ボタンから離れた場合）
+            button.addEventListener('mouseleave', function(e) {
+                socket.emit('motor_control', {
+                    action: 'stop',
+                    speed: 0,
+                    duration: 0
+                });
+                
+                this.style.transform = 'scale(1)';
+                this.style.opacity = '1';
+            });
+            
+            // タッチ開始時 - モーター開始
+            button.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const action = this.getAttribute('data-action');
+                const speed = parseInt(speedSlider.value);
+                
+                socket.emit('motor_control', {
+                    action: action,
+                    speed: speed,
+                    duration: 0
+                });
+                
+                this.style.transform = 'scale(0.95)';
+                this.style.opacity = '0.8';
+            });
+            
+            // タッチ終了時 - モーター停止
+            button.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                socket.emit('motor_control', {
+                    action: 'stop',
+                    speed: 0,
+                    duration: 0
+                });
+                
+                this.style.transform = 'scale(1)';
+                this.style.opacity = '1';
+            });
+            
+            // タッチキャンセル時 - モーター停止
+            button.addEventListener('touchcancel', function(e) {
+                e.preventDefault();
+                socket.emit('motor_control', {
+                    action: 'stop',
+                    speed: 0,
+                    duration: 0
+                });
+                
+                this.style.transform = 'scale(1)';
+                this.style.opacity = '1';
+            });
+        });
+        
+        // キーボード操作
+        let pressedKeys = new Set();
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.repeat) return; // キーリピートを無視
+            
+            const speed = parseInt(speedSlider.value);
+            let action = null;
+            
+            switch(event.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    if (!pressedKeys.has('forward')) {
+                        action = 'forward';
+                        pressedKeys.add('forward');
+                    }
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    if (!pressedKeys.has('backward')) {
+                        action = 'backward';
+                        pressedKeys.add('backward');
+                    }
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    if (!pressedKeys.has('left')) {
+                        action = 'left';
+                        pressedKeys.add('left');
+                    }
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    if (!pressedKeys.has('right')) {
+                        action = 'right';
+                        pressedKeys.add('right');
+                    }
+                    break;
+            }
+            
+            if (action) {
+                socket.emit('motor_control', {
+                    action: action,
+                    speed: speed,
+                    duration: 0
+                });
+                
+                // 対応するボタンのスタイルを更新
+                const button = document.querySelector(`[data-action="${action}"]`);
+                if (button) {
+                    button.style.transform = 'scale(0.95)';
+                    button.style.opacity = '0.8';
+                }
+                
+                event.preventDefault();
+            }
+        });
+        
+        document.addEventListener('keyup', function(event) {
+            let action = null;
+            
+            switch(event.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    action = 'forward';
+                    pressedKeys.delete('forward');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    action = 'backward';
+                    pressedKeys.delete('backward');
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    action = 'left';
+                    pressedKeys.delete('left');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    action = 'right';
+                    pressedKeys.delete('right');
+                    break;
+            }
+            
+            if (action) {
+                // モーター停止
+                socket.emit('motor_control', {
+                    action: 'stop',
+                    speed: 0,
+                    duration: 0
+                });
+                
+                // 対応するボタンのスタイルをリセット
+                const button = document.querySelector(`[data-action="${action}"]`);
+                if (button) {
+                    button.style.transform = 'scale(1)';
+                    button.style.opacity = '1';
+                }
+            }
+        });
+        
+        // ページロード時にステータスを取得
+        window.addEventListener('load', function() {
+            socket.emit('get_status');
+        });
+        
+        // ページから離れる時やフォーカスを失った時にモーターを停止
+        window.addEventListener('beforeunload', function() {
+            socket.emit('motor_control', { action: 'stop', speed: 0, duration: 0 });
+        });
+        
+        window.addEventListener('blur', function() {
+            socket.emit('motor_control', { action: 'stop', speed: 0, duration: 0 });
+            // 全てのボタンスタイルをリセット
+            const buttons = document.querySelectorAll('.control-btn');
+            buttons.forEach(button => {
+                button.style.transform = 'scale(1)';
+                button.style.opacity = '1';
+            });
+            // キープレス状態をクリア
+            pressedKeys.clear();
+        });
+    </script>
+</body>
+</html>
