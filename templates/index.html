@@ -32,6 +32,36 @@
             margin-bottom: 30px;
         }
         
+        .camera-section {
+            margin-bottom: 30px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .camera-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .camera-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .camera-stream {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #000;
+        }
+        
         .control-panel {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -452,6 +482,14 @@
             Raspberry Pi モーター制御
             <span id="connectionStatus" class="connection-status disconnected"></span>
         </h1>
+        
+        <!-- カメラストリーム表示セクション -->
+        <div class="camera-section">
+            <h2 class="camera-title">ライブカメラ映像</h2>
+            <div class="camera-container">
+                <img id="videoStream" src="/video_feed" alt="カメラ映像" class="camera-stream">
+            </div>
+        </div>
         
         <div style="text-align: center; margin-bottom: 20px; font-size: 14px; color: #666;">
             <strong>キーボード操作:</strong> WASD/矢印キー=移動 | IJKL=カメラ | C=カメラ中央<br>

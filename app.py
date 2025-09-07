@@ -1,9 +1,13 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, Response
 from flask_socketio import SocketIO, emit
 import pigpio
 import time
 import threading
 from rpi_ws281x import PixelStrip, Color
+import io
+import cv2
+from picamera2 import Picamera2
+from threading import Condition
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -49,6 +53,11 @@ servo_max_pulse = 2500  # 最大パルス幅（μs）
 strip = None
 led_brightness = 100  # 初期明度 (0-100%)
 led_animation_timer = None
+
+# カメラの設定
+camera = None
+output_frame = None
+frame_lock = threading.Lock()
 
 def init_pigpio():
     """pigpioを初期化"""
@@ -106,6 +115,64 @@ def init_neopixel():
     except Exception as e:
         print(f"NeoPixel LED初期化エラー: {e}")
         return False
+
+def init_camera():
+    """カメラを初期化"""
+    global camera
+    try:
+        camera = Picamera2()
+        
+        # カメラ設定
+        config = camera.create_video_configuration(
+            main={"size": (640, 480), "format": "RGB888"}
+        )
+        camera.configure(config)
+        camera.start()
+        
+        print("カメラ初期化完了")
+        return True
+    except Exception as e:
+        print(f"カメラ初期化エラー: {e}")
+        return False
+
+def capture_frames():
+    """カメラからフレームを取得し続ける関数"""
+    global output_frame, frame_lock
+    
+    while True:
+        try:
+            if camera is None:
+                time.sleep(0.1)
+                continue
+                
+            # フレームを取得
+            frame = camera.capture_array()
+            
+            # フレームをJPEGエンコード
+            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            
+            # グローバル変数に保存（スレッドセーフ）
+            with frame_lock:
+                output_frame = buffer.tobytes()
+                
+        except Exception as e:
+            print(f"フレーム取得エラー: {e}")
+            time.sleep(0.1)
+
+def generate_video_stream():
+    """ビデオストリーム用のジェネレータ"""
+    global output_frame, frame_lock
+    
+    while True:
+        # フレームが利用可能になるまで待機
+        with frame_lock:
+            if output_frame is None:
+                continue
+            frame = output_frame
+        
+        # HTTPレスポンス形式でフレームを返す
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 def angle_to_pulse_width(angle):
     """
@@ -334,6 +401,12 @@ def index():
     """メインページ"""
     return render_template('index.html')
 
+@app.route('/video_feed')
+def video_feed():
+    """ビデオストリーミング"""
+    return Response(generate_video_stream(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @socketio.on('connect')
 def handle_connect():
     """クライアント接続時"""
@@ -484,13 +557,11 @@ def handle_led_control(data):
         emit('error', {'message': f'未知のLEDコマンド: {action}'})
 
 def cleanup():
-    """終了処理"""
-    global pi, move_timer, strip, led_animation_timer
-    if move_timer:
-        move_timer.cancel()
-    if led_animation_timer:
-        led_animation_timer.cancel()
+    """終了時のクリーンアップ処理"""
+    global pi, strip, camera
+    
     if pi:
+        # モーターを停止
         stop_motors()
         # サーボモーターを中央位置に戻す
         set_servo_angle(SERVO_PITCH, 90)
@@ -504,6 +575,10 @@ def cleanup():
             strip.setPixelColor(i, Color(0, 0, 0))
         strip.show()
         print("NeoPixel LED終了処理完了")
+    if camera:
+        camera.stop()
+        camera.close()
+        print("カメラ終了処理完了")
 
 if __name__ == '__main__':
     try:
@@ -517,11 +592,20 @@ if __name__ == '__main__':
             print("NeoPixel LEDの初期化に失敗しました")
             exit(1)
         
+        # カメラ初期化
+        if not init_camera():
+            print("カメラの初期化に失敗しました")
+            exit(1)
+        
+        # カメラフレーム取得スレッドを開始
+        camera_thread = threading.Thread(target=capture_frames, daemon=True)
+        camera_thread.start()
+        
         print("Flask-SocketIOサーバーを開始します...")
         print("ブラウザで http://localhost:5000 にアクセスしてください")
         
         # Flaskサーバー開始
-        socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+        socketio.run(app, debug=False, host='0.0.0.0', port=5000)
         
     except KeyboardInterrupt:
         print("プログラムが中断されました")
