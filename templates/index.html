@@ -22,7 +22,7 @@
             border-radius: 10px;
             padding: 30px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
         }
         
@@ -85,6 +85,255 @@
             background-color: #9C27B0;
             grid-column: 2;
             grid-row: 2;
+        }
+        
+        .servo-section {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 30px;
+        }
+        
+        .servo-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .servo-controls {
+            display: flex;
+            gap: 30px;
+            justify-content: space-around;
+        }
+        
+        .servo-group {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .servo-group h3 {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        
+        .servo-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 8px;
+            height: 150px;
+            margin-bottom: 15px;
+        }
+        
+        .servo-btn {
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .servo-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .servo-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .servo-up {
+            background-color: #4CAF50;
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        .servo-down {
+            background-color: #9C27B0;
+            grid-column: 2;
+            grid-row: 3;
+        }
+        
+        .servo-left {
+            background-color: #2196F3;
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .servo-right {
+            background-color: #FF9800;
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        .servo-center {
+            background-color: #f44336;
+            grid-column: 2;
+            grid-row: 2;
+            font-size: 12px;
+        }
+        
+        .servo-angle {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+        
+        .servo-slider-container {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .servo-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        
+        .servo-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+        
+        .servo-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .led-section {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 30px;
+        }
+        
+        .led-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .led-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .led-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .led-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #ddd;
+            background: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .led-indicator:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-picker-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .color-input {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .brightness-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .brightness-slider {
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .led-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .led-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .led-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .led-btn-rainbow {
+            background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #0080ff, #8000ff);
+        }
+        
+        .led-btn-chase {
+            background: #FF9800;
+        }
+        
+        .led-btn-off {
+            background: #f44336;
+        }
+        
+        .led-btn-apply {
+            background: #4CAF50;
         }
         
         .speed-control {
@@ -168,6 +417,32 @@
             .control-btn {
                 font-size: 16px;
             }
+            
+            .servo-controls {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .servo-panel {
+                height: 120px;
+            }
+            
+            .servo-btn {
+                font-size: 12px;
+            }
+            
+            .led-row {
+                gap: 10px;
+            }
+            
+            .led-indicator {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .brightness-slider {
+                width: 150px;
+            }
         }
     </style>
 </head>
@@ -177,6 +452,11 @@
             Raspberry Pi モーター制御
             <span id="connectionStatus" class="connection-status disconnected"></span>
         </h1>
+        
+        <div style="text-align: center; margin-bottom: 20px; font-size: 14px; color: #666;">
+            <strong>キーボード操作:</strong> WASD/矢印キー=移動 | IJKL=カメラ | C=カメラ中央<br>
+            <strong>マウス操作:</strong> ボタン長押し=移動 | スライダー=カメラ角度調整 | LED番号クリック=選択
+        </div>
         
         <div class="speed-control">
             <label for="speedSlider">速度設定:</label>
@@ -206,6 +486,100 @@
             </button>
         </div>
         
+        <!-- サーボモーター制御セクション -->
+        <div class="servo-section">
+            <div class="servo-title">📹 カメラ制御</div>
+            <div class="servo-controls">
+                <!-- ピッチ制御 -->
+                <div class="servo-group">
+                    <h3>ピッチ（上下）</h3>
+                    <div class="servo-panel">
+                        <button class="servo-btn servo-up" data-servo="pitch" data-direction="up">
+                            ↑<br>上
+                        </button>
+                        <button class="servo-btn servo-center" data-servo="pitch" data-direction="center">
+                            ●<br>中央
+                        </button>
+                        <button class="servo-btn servo-down" data-servo="pitch" data-direction="down">
+                            ↓<br>下
+                        </button>
+                    </div>
+                    <div class="servo-angle">角度: <span id="pitchAngle">90</span>°</div>
+                    <div class="servo-slider-container">
+                        <input type="range" id="pitchSlider" class="servo-slider" min="0" max="180" value="90">
+                        <div style="font-size: 12px; color: #888;">スライダーで直接角度調整</div>
+                    </div>
+                </div>
+                
+                <!-- ヨー制御 -->
+                <div class="servo-group">
+                    <h3>ヨー（左右）</h3>
+                    <div class="servo-panel">
+                        <button class="servo-btn servo-left" data-servo="yaw" data-direction="left">
+                            ←<br>左
+                        </button>
+                        <button class="servo-btn servo-center" data-servo="yaw" data-direction="center">
+                            ●<br>中央
+                        </button>
+                        <button class="servo-btn servo-right" data-servo="yaw" data-direction="right">
+                            →<br>右
+                        </button>
+                    </div>
+                    <div class="servo-angle">角度: <span id="yawAngle">90</span>°</div>
+                    <div class="servo-slider-container">
+                        <input type="range" id="yawSlider" class="servo-slider" min="0" max="180" value="90">
+                        <div style="font-size: 12px; color: #888;">スライダーで直接角度調整</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- LED制御セクション -->
+        <div class="led-section">
+            <div class="led-title">💡 フルカラーLED制御</div>
+            <div class="led-controls">
+                <!-- LED表示 -->
+                <div class="led-row">
+                    <div class="led-indicator" data-led="0">1</div>
+                    <div class="led-indicator" data-led="1">2</div>
+                    <div class="led-indicator" data-led="2">3</div>
+                    <div class="led-indicator" data-led="3">4</div>
+                    <div class="led-indicator" data-led="4">5</div>
+                    <div class="led-indicator" data-led="5">6</div>
+                </div>
+                
+                <!-- 色選択 -->
+                <div class="color-picker-section">
+                    <label>色選択:</label>
+                    <input type="color" id="colorPicker" class="color-input" value="#ff0000">
+                    <span>R:</span>
+                    <input type="range" id="redSlider" min="0" max="255" value="255" style="width: 80px;">
+                    <span id="redValue">255</span>
+                    <span>G:</span>
+                    <input type="range" id="greenSlider" min="0" max="255" value="0" style="width: 80px;">
+                    <span id="greenValue">0</span>
+                    <span>B:</span>
+                    <input type="range" id="blueSlider" min="0" max="255" value="0" style="width: 80px;">
+                    <span id="blueValue">0</span>
+                </div>
+                
+                <!-- 明度制御 -->
+                <div class="brightness-control">
+                    <label>明度:</label>
+                    <input type="range" id="brightnessSlider" class="brightness-slider" min="0" max="100" value="100">
+                    <span id="brightnessValue">100</span>%
+                </div>
+                
+                <!-- LED制御ボタン -->
+                <div class="led-buttons">
+                    <button class="led-btn led-btn-apply" id="applyColorBtn">選択色を適用</button>
+                    <button class="led-btn led-btn-rainbow" id="rainbowBtn">レインボー</button>
+                    <button class="led-btn led-btn-chase" id="chaseBtn">チェイス</button>
+                    <button class="led-btn led-btn-off" id="ledOffBtn">消灯</button>
+                </div>
+            </div>
+        </div>
+        
         <div class="status">
             <div class="status-title">ステータス</div>
             <div id="statusValue" class="status-value">待機中...</div>
@@ -222,6 +596,29 @@
         const statusValue = document.getElementById('statusValue');
         const connectionStatus = document.getElementById('connectionStatus');
         const controlButtons = document.querySelectorAll('.control-btn');
+        const servoButtons = document.querySelectorAll('.servo-btn');
+        const pitchAngle = document.getElementById('pitchAngle');
+        const yawAngle = document.getElementById('yawAngle');
+        const pitchSlider = document.getElementById('pitchSlider');
+        const yawSlider = document.getElementById('yawSlider');
+        
+        // LED関連の要素
+        const ledIndicators = document.querySelectorAll('.led-indicator');
+        const colorPicker = document.getElementById('colorPicker');
+        const redSlider = document.getElementById('redSlider');
+        const greenSlider = document.getElementById('greenSlider');
+        const blueSlider = document.getElementById('blueSlider');
+        const redValue = document.getElementById('redValue');
+        const greenValue = document.getElementById('greenValue');
+        const blueValue = document.getElementById('blueValue');
+        const brightnessSlider = document.getElementById('brightnessSlider');
+        const brightnessValue = document.getElementById('brightnessValue');
+        const applyColorBtn = document.getElementById('applyColorBtn');
+        const rainbowBtn = document.getElementById('rainbowBtn');
+        const chaseBtn = document.getElementById('chaseBtn');
+        const ledOffBtn = document.getElementById('ledOffBtn');
+        
+        let selectedLed = -1; // -1は全LED、0-5は個別LED
         
         // 接続状態の更新
         socket.on('connect', function() {
@@ -250,9 +647,174 @@
             }, 3000);
         });
         
+        // サーボモーター状態更新
+        socket.on('servo_status', function(data) {
+            if (data.type === 'pitch') {
+                pitchAngle.textContent = data.angle;
+                pitchSlider.value = data.angle;
+            } else if (data.type === 'yaw') {
+                yawAngle.textContent = data.angle;
+                yawSlider.value = data.angle;
+            } else if (data.pitch !== undefined && data.yaw !== undefined) {
+                // 初期状態の場合
+                pitchAngle.textContent = data.pitch;
+                yawAngle.textContent = data.yaw;
+                pitchSlider.value = data.pitch;
+                yawSlider.value = data.yaw;
+            }
+        });
+        
+        // LED状態更新
+        socket.on('led_status', function(data) {
+            if (data.action === 'color_set' && data.led_index !== undefined) {
+                const color = `rgb(${data.r}, ${data.g}, ${data.b})`;
+                if (data.led_index === -1) {
+                    // 全LED
+                    ledIndicators.forEach(led => {
+                        led.style.backgroundColor = color;
+                    });
+                } else {
+                    // 個別LED
+                    const led = document.querySelector(`[data-led="${data.led_index}"]`);
+                    if (led) {
+                        led.style.backgroundColor = color;
+                    }
+                }
+            }
+        });
+        
         // 速度スライダーの更新
         speedSlider.addEventListener('input', function() {
             speedValue.textContent = this.value;
+        });
+        
+        // サーボスライダーの更新
+        pitchSlider.addEventListener('input', function() {
+            const angle = parseInt(this.value);
+            pitchAngle.textContent = angle;
+            socket.emit('servo_angle', {
+                type: 'pitch',
+                angle: angle
+            });
+        });
+        
+        yawSlider.addEventListener('input', function() {
+            const angle = parseInt(this.value);
+            yawAngle.textContent = angle;
+            socket.emit('servo_angle', {
+                type: 'yaw',
+                angle: angle
+            });
+        });
+        
+        // LED制御のイベントリスナー
+        
+        // LED選択
+        ledIndicators.forEach((led, index) => {
+            led.addEventListener('click', function() {
+                // 選択状態をリセット
+                ledIndicators.forEach(l => l.style.border = '3px solid #ddd');
+                
+                if (selectedLed === index) {
+                    // 同じLEDをクリックした場合は全LED選択
+                    selectedLed = -1;
+                } else {
+                    // 個別LED選択
+                    selectedLed = index;
+                    this.style.border = '3px solid #4CAF50';
+                }
+            });
+        });
+        
+        // カラーピッカー
+        colorPicker.addEventListener('input', function() {
+            const hex = this.value;
+            const r = parseInt(hex.substr(1, 2), 16);
+            const g = parseInt(hex.substr(3, 2), 16);
+            const b = parseInt(hex.substr(5, 2), 16);
+            
+            redSlider.value = r;
+            greenSlider.value = g;
+            blueSlider.value = b;
+            redValue.textContent = r;
+            greenValue.textContent = g;
+            blueValue.textContent = b;
+        });
+        
+        // RGB スライダー
+        redSlider.addEventListener('input', function() {
+            redValue.textContent = this.value;
+            updateColorPicker();
+        });
+        
+        greenSlider.addEventListener('input', function() {
+            greenValue.textContent = this.value;
+            updateColorPicker();
+        });
+        
+        blueSlider.addEventListener('input', function() {
+            blueValue.textContent = this.value;
+            updateColorPicker();
+        });
+        
+        function updateColorPicker() {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(blueSlider.value);
+            const hex = '#' + 
+                r.toString(16).padStart(2, '0') +
+                g.toString(16).padStart(2, '0') +
+                b.toString(16).padStart(2, '0');
+            colorPicker.value = hex;
+        }
+        
+        // 明度スライダー
+        brightnessSlider.addEventListener('input', function() {
+            brightnessValue.textContent = this.value;
+            socket.emit('led_control', {
+                action: 'set_brightness',
+                brightness: parseInt(this.value)
+            });
+        });
+        
+        // LED制御ボタン
+        applyColorBtn.addEventListener('click', function() {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(blueSlider.value);
+            
+            socket.emit('led_control', {
+                action: 'set_color',
+                led_index: selectedLed,
+                r: r,
+                g: g,
+                b: b
+            });
+        });
+        
+        rainbowBtn.addEventListener('click', function() {
+            socket.emit('led_control', {
+                action: 'animation_rainbow'
+            });
+        });
+        
+        chaseBtn.addEventListener('click', function() {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(blueSlider.value);
+            
+            socket.emit('led_control', {
+                action: 'animation_chase',
+                r: r,
+                g: g,
+                b: b
+            });
+        });
+        
+        ledOffBtn.addEventListener('click', function() {
+            socket.emit('led_control', {
+                action: 'off'
+            });
         });
         
         // モーター制御ボタンのイベントリスナー
@@ -342,6 +904,26 @@
             });
         });
         
+        // サーボモーター制御ボタンのイベントリスナー
+        servoButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const servoType = this.getAttribute('data-servo');
+                const direction = this.getAttribute('data-direction');
+                
+                socket.emit('servo_control', {
+                    type: servoType,
+                    direction: direction
+                });
+                
+                // ボタンのフィードバック
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+        
         // キーボード操作
         let pressedKeys = new Set();
         
@@ -350,6 +932,7 @@
             
             const speed = parseInt(speedSlider.value);
             let action = null;
+            let servoAction = null;
             
             switch(event.key) {
                 case 'ArrowUp':
@@ -384,6 +967,30 @@
                         pressedKeys.add('right');
                     }
                     break;
+                // サーボモーター制御（I/J/K/Lキー）
+                case 'i':
+                case 'I':
+                    servoAction = { type: 'pitch', direction: 'up' };
+                    break;
+                case 'k':
+                case 'K':
+                    servoAction = { type: 'pitch', direction: 'down' };
+                    break;
+                case 'j':
+                case 'J':
+                    servoAction = { type: 'yaw', direction: 'left' };
+                    break;
+                case 'l':
+                case 'L':
+                    servoAction = { type: 'yaw', direction: 'right' };
+                    break;
+                case 'c':
+                case 'C':
+                    // サーボモーターを中央に
+                    socket.emit('servo_control', { type: 'pitch', direction: 'center' });
+                    socket.emit('servo_control', { type: 'yaw', direction: 'center' });
+                    event.preventDefault();
+                    return;
             }
             
             if (action) {
@@ -400,6 +1007,11 @@
                     button.style.opacity = '0.8';
                 }
                 
+                event.preventDefault();
+            }
+            
+            if (servoAction) {
+                socket.emit('servo_control', servoAction);
                 event.preventDefault();
             }
         });

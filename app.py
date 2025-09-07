@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit
 import pigpio
 import time
 import threading
+from rpi_ws281x import PixelStrip, Color
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -19,11 +20,35 @@ ENB = 9   # Enable B (PWM)
 IN3 = 7   # Input 3
 IN4 = 8   # Input 4
 
+# サーボモーター のピン
+SERVO_PITCH = 18  # ピッチ制御（上下）
+SERVO_YAW = 13    # ヨー制御（左右）
+
+# NeoPixel LEDの設定
+LED_COUNT = 6        # LEDの数
+LED_PIN = 12         # LEDのデータピン
+LED_FREQ_HZ = 800000 # LED信号周波数 (800khz)
+LED_DMA = 10         # DMAチャンネル
+LED_BRIGHTNESS = 255 # 明度 (0-255)
+LED_INVERT = False   # 信号反転
+LED_CHANNEL = 0      # GPIOチャンネル
+
 # pigpioクライアントの初期化
 pi = None
 current_speed = 0
 current_direction = 0
 move_timer = None
+
+# サーボモーターの状態
+current_pitch = 90   # 初期角度（中央）
+current_yaw = 90     # 初期角度（中央）
+servo_min_pulse = 500   # 最小パルス幅（μs）
+servo_max_pulse = 2500  # 最大パルス幅（μs）
+
+# NeoPixel LEDの初期化
+strip = None
+led_brightness = 100  # 初期明度 (0-100%)
+led_animation_timer = None
 
 def init_pigpio():
     """pigpioを初期化"""
@@ -41,6 +66,8 @@ def init_pigpio():
         pi.set_mode(ENB, pigpio.OUTPUT)
         pi.set_mode(IN3, pigpio.OUTPUT)
         pi.set_mode(IN4, pigpio.OUTPUT)
+        pi.set_mode(SERVO_PITCH, pigpio.OUTPUT)
+        pi.set_mode(SERVO_YAW, pigpio.OUTPUT)
         
         # 初期状態で全てのピンをLOWに設定
         pi.write(IN1, 0)
@@ -52,11 +79,189 @@ def init_pigpio():
         pi.set_PWM_dutycycle(ENA, 0)
         pi.set_PWM_dutycycle(ENB, 0)
         
+        # サーボモーターを中央位置に設定
+        set_servo_angle(SERVO_PITCH, current_pitch)
+        set_servo_angle(SERVO_YAW, current_yaw)
+        
         print("pigpio初期化完了")
         return True
     except Exception as e:
         print(f"pigpio初期化エラー: {e}")
         return False
+
+def init_neopixel():
+    """NeoPixel LEDを初期化"""
+    global strip
+    try:
+        strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+        strip.begin()
+        
+        # 全てのLEDを消灯
+        for i in range(LED_COUNT):
+            strip.setPixelColor(i, Color(0, 0, 0))
+        strip.show()
+        
+        print("NeoPixel LED初期化完了")
+        return True
+    except Exception as e:
+        print(f"NeoPixel LED初期化エラー: {e}")
+        return False
+
+def angle_to_pulse_width(angle):
+    """
+    角度をパルス幅に変換する関数
+    angle: 0-180度
+    return: パルス幅（μs）
+    """
+    return servo_min_pulse + (angle / 180.0) * (servo_max_pulse - servo_min_pulse)
+
+def set_servo_angle(pin, angle):
+    """
+    サーボモーターの角度を設定する関数
+    pin: GPIOピン番号
+    angle: 0-180度
+    """
+    global pi
+    if pi is None or not pi.connected:
+        print("pigpioが初期化されていません")
+        return
+    
+    # 角度を0-180度の範囲に制限
+    angle = max(0, min(180, angle))
+    
+    # 角度をパルス幅に変換
+    pulse_width = angle_to_pulse_width(angle)
+    
+    # サーボ信号を送信
+    pi.set_servo_pulsewidth(pin, pulse_width)
+
+def control_servo(servo_type, direction):
+    """
+    サーボモーターを制御する関数
+    servo_type: 'pitch' または 'yaw'
+    direction: 'up', 'down', 'left', 'right', 'center'
+    """
+    global current_pitch, current_yaw
+    
+    step = 5  # 1回の操作での角度変化量
+    
+    if servo_type == 'pitch':
+        if direction == 'up':
+            current_pitch = min(180, current_pitch + step)
+        elif direction == 'down':
+            current_pitch = max(0, current_pitch - step)
+        elif direction == 'center':
+            current_pitch = 90
+        
+        set_servo_angle(SERVO_PITCH, current_pitch)
+        socketio.emit('servo_status', {
+            'type': 'pitch', 
+            'angle': current_pitch,
+            'direction': direction
+        })
+        
+    elif servo_type == 'yaw':
+        if direction == 'left':
+            current_yaw = min(180, current_yaw + step)
+        elif direction == 'right':
+            current_yaw = max(0, current_yaw - step)
+        elif direction == 'center':
+            current_yaw = 90
+        
+        set_servo_angle(SERVO_YAW, current_yaw)
+        socketio.emit('servo_status', {
+            'type': 'yaw',
+            'angle': current_yaw,
+            'direction': direction
+        })
+
+def set_led_color(led_index, r, g, b):
+    """
+    指定したLEDの色を設定
+    led_index: LEDのインデックス (0-5、-1で全LED)
+    r, g, b: RGB値 (0-255)
+    """
+    global strip, led_brightness
+    if strip is None:
+        print("NeoPixel LEDが初期化されていません")
+        return
+    
+    # 明度を適用
+    brightness_factor = led_brightness / 100.0
+    r = int(r * brightness_factor)
+    g = int(g * brightness_factor)
+    b = int(b * brightness_factor)
+    
+    color = Color(r, g, b)
+    
+    if led_index == -1:  # 全てのLED
+        for i in range(LED_COUNT):
+            strip.setPixelColor(i, color)
+    else:  # 指定したLED
+        if 0 <= led_index < LED_COUNT:
+            strip.setPixelColor(led_index, color)
+    
+    strip.show()
+
+def set_led_brightness(brightness):
+    """LED明度を設定 (0-100%)"""
+    global led_brightness
+    led_brightness = max(0, min(100, brightness))
+    socketio.emit('led_status', {'brightness': led_brightness})
+
+def led_animation_rainbow():
+    """レインボーアニメーション"""
+    global strip
+    if strip is None:
+        return
+    
+    import math
+    
+    for j in range(256):
+        for i in range(LED_COUNT):
+            pixel_index = (i * 256 // LED_COUNT) + j
+            r = int((math.sin(pixel_index * 0.024) + 1) * 127)
+            g = int((math.sin(pixel_index * 0.024 + 2) + 1) * 127)
+            b = int((math.sin(pixel_index * 0.024 + 4) + 1) * 127)
+            
+            # 明度を適用
+            brightness_factor = led_brightness / 100.0
+            r = int(r * brightness_factor)
+            g = int(g * brightness_factor)
+            b = int(b * brightness_factor)
+            
+            strip.setPixelColor(i, Color(r, g, b))
+        
+        strip.show()
+        time.sleep(0.02)
+
+def led_animation_chase(r, g, b):
+    """チェイスアニメーション"""
+    global strip
+    if strip is None:
+        return
+    
+    brightness_factor = led_brightness / 100.0
+    r = int(r * brightness_factor)
+    g = int(g * brightness_factor)
+    b = int(b * brightness_factor)
+    
+    for i in range(LED_COUNT):
+        # 全て消灯
+        for j in range(LED_COUNT):
+            strip.setPixelColor(j, Color(0, 0, 0))
+        
+        # 現在のLEDを点灯
+        strip.setPixelColor(i, Color(r, g, b))
+        strip.show()
+        time.sleep(0.2)
+
+def stop_led_animation():
+    """LEDアニメーションを停止"""
+    global led_animation_timer
+    if led_animation_timer:
+        led_animation_timer.cancel()
+        led_animation_timer = None
 
 def move_motors(speed, direction):
     """
@@ -184,22 +389,132 @@ def handle_get_status():
         'direction': current_direction,
         'connected': pi.connected if pi else False
     })
+    emit('servo_status', {
+        'pitch': current_pitch,
+        'yaw': current_yaw
+    })
+
+@socketio.on('servo_control')
+def handle_servo_control(data):
+    """サーボモーター制御コマンドを受信"""
+    servo_type = data.get('type')  # 'pitch' または 'yaw'
+    direction = data.get('direction')  # 'up', 'down', 'left', 'right', 'center'
+    
+    print(f"サーボ制御コマンド: {servo_type}, 方向: {direction}")
+    
+    if servo_type in ['pitch', 'yaw'] and direction in ['up', 'down', 'left', 'right', 'center']:
+        control_servo(servo_type, direction)
+    else:
+        emit('error', {'message': f'未知のサーボコマンド: {servo_type}, {direction}'})
+
+@socketio.on('servo_angle')
+def handle_servo_angle(data):
+    """サーボモーターの角度直接指定"""
+    global current_pitch, current_yaw
+    
+    servo_type = data.get('type')  # 'pitch' または 'yaw'
+    angle = data.get('angle', 90)  # 角度（0-180）
+    
+    print(f"サーボ角度設定: {servo_type}, 角度: {angle}度")
+    
+    # 角度を0-180度の範囲に制限
+    angle = max(0, min(180, angle))
+    
+    if servo_type == 'pitch':
+        current_pitch = angle
+        set_servo_angle(SERVO_PITCH, current_pitch)
+        socketio.emit('servo_status', {
+            'type': 'pitch', 
+            'angle': current_pitch,
+            'direction': 'slider'
+        })
+    elif servo_type == 'yaw':
+        current_yaw = angle
+        set_servo_angle(SERVO_YAW, current_yaw)
+        socketio.emit('servo_status', {
+            'type': 'yaw',
+            'angle': current_yaw,
+            'direction': 'slider'
+        })
+    else:
+        emit('error', {'message': f'未知のサーボタイプ: {servo_type}'})
+
+@socketio.on('led_control')
+def handle_led_control(data):
+    """LED制御コマンドを受信"""
+    action = data.get('action')
+    
+    print(f"LED制御コマンド: {action}")
+    
+    if action == 'set_color':
+        led_index = data.get('led_index', -1)  # -1で全LED
+        r = data.get('r', 0)
+        g = data.get('g', 0)
+        b = data.get('b', 0)
+        set_led_color(led_index, r, g, b)
+        socketio.emit('led_status', {
+            'action': 'color_set',
+            'led_index': led_index,
+            'r': r, 'g': g, 'b': b
+        })
+        
+    elif action == 'set_brightness':
+        brightness = data.get('brightness', 100)
+        set_led_brightness(brightness)
+        
+    elif action == 'animation_rainbow':
+        stop_led_animation()
+        threading.Thread(target=led_animation_rainbow, daemon=True).start()
+        socketio.emit('led_status', {'action': 'animation_started', 'type': 'rainbow'})
+        
+    elif action == 'animation_chase':
+        r = data.get('r', 255)
+        g = data.get('g', 0)
+        b = data.get('b', 0)
+        stop_led_animation()
+        threading.Thread(target=led_animation_chase, args=(r, g, b), daemon=True).start()
+        socketio.emit('led_status', {'action': 'animation_started', 'type': 'chase'})
+        
+    elif action == 'off':
+        stop_led_animation()
+        set_led_color(-1, 0, 0, 0)  # 全LED消灯
+        socketio.emit('led_status', {'action': 'off'})
+        
+    else:
+        emit('error', {'message': f'未知のLEDコマンド: {action}'})
 
 def cleanup():
     """終了処理"""
-    global pi, move_timer
+    global pi, move_timer, strip, led_animation_timer
     if move_timer:
         move_timer.cancel()
+    if led_animation_timer:
+        led_animation_timer.cancel()
     if pi:
         stop_motors()
+        # サーボモーターを中央位置に戻す
+        set_servo_angle(SERVO_PITCH, 90)
+        set_servo_angle(SERVO_YAW, 90)
+        time.sleep(0.5)  # サーボが動く時間を確保
         pi.stop()
         print("pigpio終了処理完了")
+    if strip:
+        # 全LEDを消灯
+        for i in range(LED_COUNT):
+            strip.setPixelColor(i, Color(0, 0, 0))
+        strip.show()
+        print("NeoPixel LED終了処理完了")
 
 if __name__ == '__main__':
     try:
         # pigpio初期化
         if not init_pigpio():
             print("pigpioの初期化に失敗しました")
+            exit(1)
+        
+        # NeoPixel LED初期化
+        if not init_neopixel():
+            print("NeoPixel LEDの初期化に失敗しました")
             exit(1)
         
         print("Flask-SocketIOサーバーを開始します...")
