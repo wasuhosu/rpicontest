@@ -1,0 +1,480 @@
+/* モバイル最適化CSS */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+.mobile-container {
+    max-width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ヘッダー */
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 10px 15px;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.connection-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.connected {
+    background-color: #4CAF50;
+}
+
+.disconnected {
+    background-color: #f44336;
+}
+
+/* カメラセクション */
+.camera-section {
+    position: relative;
+    margin: 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+}
+
+.camera-stream {
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+    object-fit: cover;
+    display: block;
+}
+
+.camera-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* メイン制御セクション */
+.control-section {
+    padding: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* 移動制御 */
+.movement-controls h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+}
+
+.movement-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 5px;
+    aspect-ratio: 1;
+}
+
+.control-btn {
+    border: none;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.forward-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.left-btn {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.stop-btn {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 16px;
+}
+
+.right-btn {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.backward-btn {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    grid-column: 2;
+    grid-row: 3;
+}
+
+/* カメラ制御 */
+.camera-controls h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+}
+
+.servo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 5px;
+    aspect-ratio: 1;
+}
+
+.servo-btn {
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #607D8B, #455A64);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.servo-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.servo-btn:nth-child(1) { grid-column: 2; grid-row: 1; }
+.servo-btn:nth-child(2) { grid-column: 1; grid-row: 2; }
+.servo-btn:nth-child(3) { grid-column: 2; grid-row: 2; }
+.servo-btn:nth-child(4) { grid-column: 3; grid-row: 2; }
+.servo-btn:nth-child(5) { grid-column: 2; grid-row: 3; }
+
+.center-btn {
+    background: linear-gradient(135deg, #FF5722, #D84315) !important;
+    font-size: 14px;
+}
+
+.angle-display {
+    margin-top: 8px;
+    text-align: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* スライダーセクション */
+.slider-section {
+    padding: 0 15px 15px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.slider-group {
+    text-align: center;
+}
+
+.slider-group label {
+    display: block;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* LEDセクション */
+.led-section {
+    margin: 0 15px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.led-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+}
+
+.led-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-picker {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.led-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+}
+
+.led-btn:active {
+    transform: scale(0.95);
+}
+
+.apply-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.off-btn {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.effect-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rainbow-btn {
+    background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #0080ff, #8000ff);
+    width: 50px;
+    flex-shrink: 0;
+}
+
+.chase-btn {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    width: 50px;
+    flex-shrink: 0;
+}
+
+.brightness-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    color: white;
+    font-size: 12px;
+}
+
+.brightness-slider {
+    flex: 1;
+    height: 4px;
+}
+
+/* ステータスセクション */
+.status-section {
+    margin: 0 15px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 10px 15px;
+}
+
+.status-display {
+    text-align: center;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ヘルプセクション */
+.help-section {
+    margin: 0 15px 20px;
+}
+
+.help-section details {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 10px 15px;
+}
+
+.help-section summary {
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.help-section summary::-webkit-details-marker {
+    display: none;
+}
+
+.help-content {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.help-content p {
+    margin: 5px 0;
+}
+
+/* タッチデバイス用の調整 */
+@media (hover: none) and (pointer: coarse) {
+    .help-section {
+        display: none;
+    }
+    
+    .control-btn, .servo-btn, .led-btn {
+        min-height: 44px;
+    }
+}
+
+/* 小画面用の調整 */
+@media (max-width: 360px) {
+    .control-section {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .slider-section {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .header h1 {
+        font-size: 16px;
+    }
+    
+    .control-btn, .servo-btn {
+        font-size: 16px;
+    }
+}
+
+/* 横画面用の調整 */
+@media (orientation: landscape) and (max-height: 500px) {
+    .camera-stream {
+        max-height: 25vh;
+    }
+    
+    .control-section {
+        padding: 10px 15px;
+    }
+    
+    .led-section, .status-section {
+        margin: 0 15px 10px;
+        padding: 10px;
+    }
+}

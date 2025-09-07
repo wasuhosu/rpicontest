@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request
 from flask_socketio import SocketIO, emit
 import pigpio
 import time
@@ -7,7 +7,9 @@ from rpi_ws281x import PixelStrip, Color
 import io
 import cv2
 from picamera2 import Picamera2
+from libcamera import Transform
 from threading import Condition
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -122,14 +124,15 @@ def init_camera():
     try:
         camera = Picamera2()
         
-        # カメラ設定
+        # カメラ設定（上下左右反転）
         config = camera.create_video_configuration(
-            main={"size": (640, 480), "format": "RGB888"}
+            main={"size": (640, 480), "format": "RGB888"},
+            transform=Transform(hflip=True, vflip=True)
         )
         camera.configure(config)
         camera.start()
         
-        print("カメラ初期化完了")
+        print("カメラ初期化完了（上下左右反転）")
         return True
     except Exception as e:
         print(f"カメラ初期化エラー: {e}")
@@ -398,7 +401,24 @@ def auto_stop():
 
 @app.route('/')
 def index():
-    """メインページ"""
+    """メインページ - モバイルデバイスを自動検出"""
+    user_agent = request.headers.get('User-Agent', '').lower()
+    mobile_keywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone']
+    
+    # モバイルデバイスの場合は自動的にモバイル版にリダイレクト
+    if any(keyword in user_agent for keyword in mobile_keywords):
+        return render_template('mobile.html')
+    else:
+        return render_template('index.html')
+
+@app.route('/mobile')
+def mobile():
+    """モバイル最適化ページ"""
+    return render_template('mobile.html')
+
+@app.route('/desktop')
+def desktop():
+    """デスクトップ版ページ"""
     return render_template('index.html')
 
 @app.route('/video_feed')

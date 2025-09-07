@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Raspberry Pi ロボット制御</title>
+    
+    <!-- 外部CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-style.css') }}">
+    
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1>🤖 Pi ロボット
+                <span id="connectionStatus" class="connection-status disconnected"></span>
+            </h1>
+        </header>
+
+        <!-- カメラ映像 -->
+        <section class="camera-section">
+            <div class="camera-container">
+                <img id="videoStream" src="/video_feed" alt="カメラ映像" class="camera-stream">
+                <div class="camera-overlay">
+                    <div class="speed-display">速度: <span id="speedValue">50</span>%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- メイン制御パネル -->
+        <section class="control-section">
+            <!-- 移動制御 -->
+            <div class="movement-controls">
+                <div class="movement-grid">
+                    <button class="control-btn forward-btn" data-action="forward">↑</button>
+                    <button class="control-btn left-btn" data-action="left">←</button>
+                    <button class="control-btn stop-btn" data-action="stop">⏹</button>
+                    <button class="control-btn right-btn" data-action="right">→</button>
+                    <button class="control-btn backward-btn" data-action="backward">↓</button>
+                </div>
+            </div>
+
+            <!-- カメラ制御 -->
+            <div class="camera-controls">
+                <h3>📹 カメラ</h3>
+                <div class="servo-grid">
+                    <button class="servo-btn" data-servo="pitch" data-direction="up">↑</button>
+                    <button class="servo-btn" data-servo="yaw" data-direction="left">←</button>
+                    <button class="servo-btn center-btn" data-servo="both" data-direction="center">●</button>
+                    <button class="servo-btn" data-servo="yaw" data-direction="right">→</button>
+                    <button class="servo-btn" data-servo="pitch" data-direction="down">↓</button>
+                </div>
+                <div class="angle-display">
+                    P: <span id="pitchAngle">90</span>° | Y: <span id="yawAngle">90</span>°
+                </div>
+            </div>
+        </section>
+
+        <!-- スライダー制御 -->
+        <section class="slider-section">
+            <div class="slider-group">
+                <label>速度</label>
+                <input type="range" id="speedSlider" class="slider" min="0" max="100" value="50">
+            </div>
+            <div class="slider-group">
+                <label>ピッチ</label>
+                <input type="range" id="pitchSlider" class="slider" min="0" max="180" value="90">
+            </div>
+            <div class="slider-group">
+                <label>ヨー</label>
+                <input type="range" id="yawSlider" class="slider" min="0" max="180" value="90">
+            </div>
+        </section>
+
+        <!-- LED制御 -->
+        <section class="led-section">
+            <h3>💡 LED</h3>
+            <div class="led-controls">
+                <!-- 色選択 -->
+                <div class="color-row">
+                    <input type="color" id="colorPicker" class="color-picker" value="#ff0000">
+                    <button class="led-btn apply-btn" id="applyColorBtn">適用</button>
+                    <button class="led-btn off-btn" id="ledOffBtn">消灯</button>
+                </div>
+                
+                <!-- エフェクト -->
+                <div class="effect-row">
+                    <button class="led-btn rainbow-btn" id="rainbowBtn">🌈</button>
+                    <button class="led-btn chase-btn" id="chaseBtn">⚡</button>
+                    <div class="brightness-control">
+                        <span>明度</span>
+                        <input type="range" id="brightnessSlider" class="brightness-slider" min="0" max="100" value="100">
+                        <span id="brightnessValue">100</span>%
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ステータス -->
+        <section class="status-section">
+            <div class="status-display">
+                <div id="statusValue">待機中...</div>
+            </div>
+        </section>
+
+        <!-- キーボード操作説明（タッチデバイスでは非表示） -->
+        <section class="help-section">
+            <details>
+                <summary>操作方法</summary>
+                <div class="help-content">
+                    <p><strong>移動:</strong> 方向ボタン、WASD、矢印キー</p>
+                    <p><strong>カメラ:</strong> カメラボタン、IJKL、Cで中央</p>
+                    <p><strong>速度:</strong> スライダーで調整</p>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <!-- 外部JavaScript -->
+    <script src="{{ url_for('static', filename='js/mobile-script.js') }}"></script>
+</body>
+</html>
